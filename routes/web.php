@@ -16,7 +16,7 @@ Route::get('/', function () {
     }
 
     return Inertia::render('Welcome', [
-        'appName' => config('app.name', 'BranchWise POS'),
+        'appName' => config('app.name', 'StoreFleet'),
         'phpVersion' => PHP_VERSION,
         'laravelVersion' => app()->version(),
         'dbDriver' => $dbDriver,

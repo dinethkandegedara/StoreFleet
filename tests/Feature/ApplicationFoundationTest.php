@@ -46,6 +46,38 @@ class ApplicationFoundationTest extends TestCase
     }
 
     /**
+     * Test flash messages are shared to the Inertia payload for toast display.
+     */
+    public function test_flash_messages_are_shared_for_toast_notifications(): void
+    {
+        $response = $this->withSession([
+            'success' => 'Item saved successfully.',
+            'error' => 'Unable to proceed with action.',
+        ])->get('/');
+
+        $response->assertInertia(fn (Assert $page) => $page
+            ->where('flash.success', 'Item saved successfully.')
+            ->where('flash.error', 'Unable to proceed with action.')
+        );
+    }
+
+    /**
+     * Test that compiled frontend assets manifest exists and contains entrypoints.
+     */
+    public function test_frontend_build_manifest_exists(): void
+    {
+        $manifestPath = public_path('build/manifest.json');
+
+        $this->assertFileExists($manifestPath, 'Vite production build manifest must exist.');
+
+        $manifestContent = json_decode((string) file_get_contents($manifestPath), true);
+
+        $this->assertIsArray($manifestContent);
+        $this->assertArrayHasKey('resources/js/app.ts', $manifestContent);
+        $this->assertArrayHasKey('resources/css/app.css', $manifestContent);
+    }
+
+    /**
      * Test health check endpoint responds with 200.
      */
     public function test_health_check_endpoint(): void

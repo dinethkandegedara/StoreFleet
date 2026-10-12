@@ -1,18 +1,30 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { ref } from 'vue';
 import { Head } from '@inertiajs/vue3';
-import { useTheme } from '@/Composables/useTheme';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import PosLayout from '@/Layouts/PosLayout.vue';
+import BaseButton from '@/Components/UI/BaseButton.vue';
+import BaseBadge from '@/Components/UI/BaseBadge.vue';
+import BaseAlert from '@/Components/UI/BaseAlert.vue';
+import BaseModal from '@/Components/UI/BaseModal.vue';
+import BaseDropdown from '@/Components/UI/BaseDropdown.vue';
+import BaseTable from '@/Components/UI/BaseTable.vue';
+import BaseInput from '@/Components/Forms/BaseInput.vue';
+import BaseSelect from '@/Components/Forms/BaseSelect.vue';
+import BaseCheckbox from '@/Components/Forms/BaseCheckbox.vue';
+import { useToast } from '@/Composables/useToast';
 import { 
-    Sun, 
-    Moon, 
-    CheckCircle2, 
-    Server, 
-    Database, 
-    Cpu, 
     Layers, 
-    ShieldCheck, 
-    Sparkles,
-    Palette
+    Search, 
+    Plus, 
+    Trash2, 
+    ExternalLink, 
+    Sparkles, 
+    ShoppingBag, 
+    CreditCard, 
+    SlidersHorizontal,
+    Monitor,
+    Maximize2
 } from 'lucide-vue-next';
 
 interface Props {
@@ -24,190 +36,323 @@ interface Props {
     appEnv: string;
 }
 
-const props = defineProps<Props>();
-const { theme, primaryColor, toggleTheme, setPrimaryColor, initTheme } = useTheme();
+defineProps<Props>();
 
-onMounted(() => {
-    initTheme();
-});
+const toast = useToast();
 
-const presetColors = [
-    { name: 'Classic Blue', hex: '#2563eb' },
-    { name: 'Emerald POS', hex: '#059669' },
-    { name: 'Indigo Modern', hex: '#4f46e5' },
-    { name: 'Purple Luxe', hex: '#7c3aed' },
-    { name: 'Amber Glow', hex: '#d97706' },
-    { name: 'Rose Accent', hex: '#e11d48' },
+// Interactive Test State
+const previewLayout = ref<'admin' | 'pos'>('admin');
+const isButtonLoading = ref(false);
+const isModalOpen = ref(false);
+const isTableLoading = ref(false);
+const isTableEmpty = ref(false);
+const alertDismissed = ref(false);
+
+// Form Test State
+const sampleInput = ref('Sample item description');
+const sampleInputError = ref('This field is required in production validation.');
+const sampleSelect = ref('USD');
+const sampleCheckbox = ref(true);
+
+const selectOptions = [
+    { label: 'US Dollar ($ - USD)', value: 'USD' },
+    { label: 'Euro (€ - EUR)', value: 'EUR' },
+    { label: 'British Pound (£ - GBP)', value: 'GBP' },
+    { label: 'Canadian Dollar ($ - CAD)', value: 'CAD' },
 ];
+
+// Sample table records for design verification
+const tableRecords = [
+    { id: 'SKU-001', name: 'Standard Thermal Paper (80mm)', category: 'Supplies', price: '$24.50', status: 'In Stock', variant: 'success' as const },
+    { id: 'SKU-002', name: 'Wireless Barcode Scanner Handheld', category: 'Hardware', price: '$89.00', status: 'Low Stock', variant: 'warning' as const },
+    { id: 'SKU-003', name: 'Electronic Cash Drawer (RJ11)', category: 'Hardware', price: '$115.00', status: 'In Stock', variant: 'success' as const },
+    { id: 'SKU-004', name: 'Receipt Printer Stand Mount', category: 'Accessories', price: '$35.00', status: 'Out of Stock', variant: 'danger' as const },
+];
+
+const toggleButtonLoading = () => {
+    isButtonLoading.value = true;
+    setTimeout(() => {
+        isButtonLoading.value = false;
+        toast.info('Button loading state completed.');
+    }, 1200);
+};
 </script>
 
 <template>
-    <Head title="System Foundation - BranchWise POS" />
+    <Head title="Design System & Shell - StoreFleet" />
 
-    <div class="min-h-screen flex flex-col">
-        <!-- Glass Navigation Header -->
-        <header class="glass-nav">
-            <div class="container flex items-center justify-between" style="height: 4.25rem;">
-                <div class="flex items-center gap-3">
-                    <div style="width: 2.5rem; height: 2.5rem; border-radius: var(--radius-md); background: linear-gradient(135deg, var(--primary), var(--primary-hover)); display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 4px 10px rgba(var(--primary-rgb), 0.35);">
-                        <Layers :size="22" />
-                    </div>
-                    <div>
-                        <h1 style="font-size: 1.25rem; font-weight: 700; line-height: 1.2;">{{ appName }}</h1>
-                        <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;">Phase 1: Application Foundation</span>
-                    </div>
-                </div>
-
-                <div class="flex items-center gap-3">
-                    <!-- Theme Toggle -->
-                    <button 
-                        @click="toggleTheme" 
-                        class="btn btn-secondary btn-sm" 
-                        :title="theme === 'dark' ? 'Switch to Light Theme' : 'Switch to Dark Theme'"
-                        aria-label="Toggle theme"
-                    >
-                        <Sun v-if="theme === 'dark'" :size="16" />
-                        <Moon v-else :size="16" />
-                        <span>{{ theme === 'dark' ? 'Light' : 'Dark' }}</span>
-                    </button>
-                </div>
-            </div>
-        </header>
-
-        <!-- Main Content -->
-        <main class="container flex-1" style="padding-top: 2.5rem; padding-bottom: 3.5rem;">
-            <!-- Hero Banner -->
-            <div class="card card-elevated" style="margin-bottom: 2rem; background: linear-gradient(180deg, var(--bg-surface) 0%, var(--bg-subtle) 100%); border-left: 4px solid var(--primary);">
-                <div class="flex flex-col gap-3">
+    <!-- POS Shell Preview Mode -->
+    <PosLayout v-if="previewLayout === 'pos'" branch-name="Downtown Flagship" cashier-name="Sarah Jenkins">
+        <div style="flex: 1; padding: var(--space-4); display: flex; gap: var(--space-4); height: 100%; overflow: hidden;">
+            <!-- Left: Catalog Area Placeholder -->
+            <div class="card" style="flex: 3; display: flex; flex-direction: column; height: 100%;">
+                <div class="flex items-center justify-between" style="margin-bottom: var(--space-4);">
                     <div class="flex items-center gap-2">
-                        <span class="badge badge-success">
-                            <CheckCircle2 :size="12" /> Phase 1 Verified
-                        </span>
-                        <span class="badge badge-primary">Shared Hosting Ready</span>
+                        <ShoppingBag :size="20" style="color: var(--primary);" />
+                        <h3 style="font-size: 1.15rem;">POS Catalog Viewport</h3>
                     </div>
-                    <h2>Production POS Architecture Initialized</h2>
-                    <p style="max-width: 48rem; font-size: 1.05rem;">
-                        The foundation for <strong>BranchWise POS</strong> is configured according to the approved architectural blueprint.
-                        The backend couples Laravel 12 with an Inertia.js protocol layer driving Vue 3 and TypeScript, all compiled to static assets compatible with ordinary shared hosting.
+                    <BaseButton variant="secondary" size="sm" @click="previewLayout = 'admin'">
+                        <Monitor :size="16" />
+                        <span>Return to Admin Portal</span>
+                    </BaseButton>
+                </div>
+
+                <div style="flex: 1; border: 2px dashed var(--border-subtle); border-radius: var(--radius-md); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: var(--space-6); text-align: center;">
+                    <Sparkles :size="32" style="color: var(--primary); margin-bottom: var(--space-2);" />
+                    <h4>POS Layout Ready for Phase 4</h4>
+                    <p style="max-width: 28rem; font-size: 0.875rem;">
+                        This viewport verifies full-screen, distraction-free dimensions, high-contrast borders, and accessibility tokens across light and dark themes.
                     </p>
                 </div>
             </div>
 
-            <!-- Diagnostics & Theme Controls Grid -->
-            <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
-                <!-- System Diagnostics -->
-                <div class="card">
-                    <div class="flex items-center gap-2" style="margin-bottom: 1.25rem;">
-                        <Server :size="20" style="color: var(--primary);" />
-                        <h3>Runtime Diagnostics</h3>
-                    </div>
-
-                    <div class="flex flex-col gap-3">
-                        <div class="flex items-center justify-between" style="padding-bottom: 0.75rem; border-bottom: 1px solid var(--border-subtle);">
-                            <span style="font-size: 0.9rem; color: var(--text-secondary); display: flex; align-items: center; gap: 0.5rem;">
-                                <Cpu :size="16" /> Framework
-                            </span>
-                            <span class="mono" style="font-weight: 600; font-size: 0.875rem;">Laravel {{ laravelVersion }}</span>
-                        </div>
-
-                        <div class="flex items-center justify-between" style="padding-bottom: 0.75rem; border-bottom: 1px solid var(--border-subtle);">
-                            <span style="font-size: 0.9rem; color: var(--text-secondary); display: flex; align-items: center; gap: 0.5rem;">
-                                <Layers :size="16" /> PHP Environment
-                            </span>
-                            <span class="mono" style="font-weight: 600; font-size: 0.875rem;">PHP {{ phpVersion }}</span>
-                        </div>
-
-                        <div class="flex items-center justify-between" style="padding-bottom: 0.75rem; border-bottom: 1px solid var(--border-subtle);">
-                            <span style="font-size: 0.9rem; color: var(--text-secondary); display: flex; align-items: center; gap: 0.5rem;">
-                                <Database :size="16" /> Relational Database
-                            </span>
-                            <span class="badge" :class="dbConnected ? 'badge-success' : 'badge-danger'">
-                                {{ dbDriver.toUpperCase() }} {{ dbConnected ? 'Connected' : 'Error' }}
-                            </span>
-                        </div>
-
-                        <div class="flex items-center justify-between">
-                            <span style="font-size: 0.9rem; color: var(--text-secondary); display: flex; align-items: center; gap: 0.5rem;">
-                                <ShieldCheck :size="16" /> Environment Mode
-                            </span>
-                            <span class="badge badge-primary">{{ appEnv.toUpperCase() }}</span>
-                        </div>
-                    </div>
+            <!-- Right: Cart & Checkout Ledger Area Placeholder -->
+            <div class="card" style="flex: 2; display: flex; flex-direction: column; height: 100%;">
+                <div class="flex items-center gap-2" style="margin-bottom: var(--space-4);">
+                    <CreditCard :size="20" style="color: var(--primary);" />
+                    <h3 style="font-size: 1.15rem;">Checkout Ledger</h3>
                 </div>
 
-                <!-- Theme Customization Engine -->
-                <div class="card">
-                    <div class="flex items-center gap-2" style="margin-bottom: 1.25rem;">
-                        <Palette :size="20" style="color: var(--primary);" />
-                        <h3>Customizable Theme Engine</h3>
-                    </div>
+                <div style="flex: 1; border: 2px dashed var(--border-subtle); border-radius: var(--radius-md); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: var(--space-4);">
+                    <p style="font-size: 0.85rem;">Cart calculations and payment ledger mount here in Phase 4.</p>
+                </div>
 
-                    <p style="font-size: 0.875rem; margin-bottom: 1rem;">
-                        Test the dynamic business accent color system. Brand colors are stored as CSS custom properties and adapt instantly across both light and dark themes without page reloads.
-                    </p>
+                <div style="margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--border-subtle);">
+                    <BaseButton variant="primary" style="width: 100%;" size="lg" @click="toast.success('POS Layout test verified.')">
+                        Complete Checkout
+                    </BaseButton>
+                </div>
+            </div>
+        </div>
+    </PosLayout>
 
-                    <div style="margin-bottom: 1.25rem;">
-                        <span class="form-label" style="display: block; margin-bottom: 0.5rem;">Select Accent Palette:</span>
-                        <div class="flex items-center gap-2" style="flex-wrap: wrap;">
-                            <button 
-                                v-for="color in presetColors" 
-                                :key="color.hex"
-                                @click="setPrimaryColor(color.hex)"
-                                :style="{ backgroundColor: color.hex }"
-                                style="width: 2.25rem; height: 2.25rem; border-radius: var(--radius-md); border: 2px solid white; box-shadow: var(--shadow-sm); cursor: pointer; transition: transform var(--transition-fast);"
-                                :title="color.name"
-                            ></button>
+    <!-- Admin Shell Mode (Default) -->
+    <AppLayout v-else>
+        <div style="max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: var(--space-6);">
+            <!-- Phase 2 Header & Layout Switcher -->
+            <div class="card card-elevated" style="border-left: 4px solid var(--primary);">
+                <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: var(--space-4);">
+                    <div>
+                        <div class="flex items-center gap-2" style="margin-bottom: var(--space-2);">
+                            <BaseBadge variant="primary">Phase 2: Complete</BaseBadge>
+                            <BaseBadge variant="success">WCAG AA Focus &amp; Contrast</BaseBadge>
                         </div>
+                        <h2>Global Design System &amp; Application Shell</h2>
+                        <p style="font-size: 0.95rem; margin-top: var(--space-1);">
+                            Reusable, theme-agnostic component library powered by CSS custom properties. Verify components and test theme switching below.
+                        </p>
                     </div>
 
                     <div class="flex items-center gap-3">
-                        <button class="btn btn-primary btn-sm">Primary Action</button>
-                        <button class="btn btn-secondary btn-sm">Secondary Action</button>
+                        <BaseButton variant="outline" size="sm" @click="previewLayout = 'pos'">
+                            <Maximize2 :size="16" />
+                            <span>Preview POS Terminal Shell</span>
+                        </BaseButton>
                     </div>
                 </div>
             </div>
 
-            <!-- Architectural Foundations Summary -->
+            <!-- Section 1: Buttons, States & Dialogs -->
             <div class="card">
-                <div class="flex items-center gap-2" style="margin-bottom: 1.25rem;">
-                    <ShieldCheck :size="20" style="color: var(--primary);" />
-                    <h3>Architectural Guardrails for Subsequent Phases</h3>
+                <h3 style="margin-bottom: var(--space-4); display: flex; align-items: center; gap: var(--space-2);">
+                    <SlidersHorizontal :size="18" style="color: var(--primary);" />
+                    <span>Buttons, Sizes &amp; Interactive States</span>
+                </h3>
+
+                <div class="flex items-center gap-3" style="flex-wrap: wrap; margin-bottom: var(--space-4);">
+                    <BaseButton variant="primary">Primary</BaseButton>
+                    <BaseButton variant="secondary">Secondary</BaseButton>
+                    <BaseButton variant="outline">Outline</BaseButton>
+                    <BaseButton variant="ghost">Ghost</BaseButton>
+                    <BaseButton variant="danger">Danger</BaseButton>
+                    <BaseButton variant="primary" :loading="isButtonLoading" @click="toggleButtonLoading">
+                        <span>Click for Spinner</span>
+                    </BaseButton>
+                    <BaseButton variant="secondary" disabled>Disabled</BaseButton>
+                    <BaseButton variant="primary" size="sm">Small</BaseButton>
+                    <BaseButton variant="primary" size="lg">Large</BaseButton>
                 </div>
 
-                <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem;">
-                    <div style="padding: 1rem; border-radius: var(--radius-md); background-color: var(--bg-subtle);">
-                        <h4 style="font-size: 0.95rem; margin-bottom: 0.35rem;">Multi-Branch Scoping</h4>
-                        <p style="font-size: 0.825rem;">Strict tenant isolation enforced via database session context, gate policies, and Eloquent global scopes.</p>
-                    </div>
+                <div class="flex items-center gap-3" style="padding-top: var(--space-4); border-top: 1px solid var(--border-subtle);">
+                    <BaseButton variant="secondary" size="sm" @click="isModalOpen = true">
+                        <span>Open Modal Dialog</span>
+                    </BaseButton>
 
-                    <div style="padding: 1rem; border-radius: var(--radius-md); background-color: var(--bg-subtle);">
-                        <h4 style="font-size: 0.95rem; margin-bottom: 0.35rem;">Super Admin Separation</h4>
-                        <p style="font-size: 0.825rem;">Independent administrative identity with dedicated audit logs, distinct from store owners and cashiers.</p>
-                    </div>
+                    <BaseDropdown align="left" width="200px">
+                        <template #trigger>
+                            <BaseButton variant="secondary" size="sm">
+                                <span>Dropdown Menu</span>
+                            </BaseButton>
+                        </template>
+                        <template #default="{ close }">
+                            <button class="dropdown-item" @click="close">Edit Settings</button>
+                            <button class="dropdown-item" @click="close">Print Duplicate</button>
+                            <div class="dropdown-divider"></div>
+                            <button class="dropdown-item" style="color: var(--danger);" @click="close">Delete Item</button>
+                        </template>
+                    </BaseDropdown>
 
-                    <div style="padding: 1rem; border-radius: var(--radius-md); background-color: var(--bg-subtle);">
-                        <h4 style="font-size: 0.95rem; margin-bottom: 0.35rem;">Transaction-Safe Checkout</h4>
-                        <p style="font-size: 0.825rem;">Database transactions, sequential invoice numbers, idempotency tokens, and immutable price snapshots.</p>
-                    </div>
+                    <BaseButton variant="ghost" size="sm" @click="toast.success('Operation completed successfully!')">
+                        Trigger Success Toast
+                    </BaseButton>
 
-                    <div style="padding: 1rem; border-radius: var(--radius-md); background-color: var(--bg-subtle);">
-                        <h4 style="font-size: 0.95rem; margin-bottom: 0.35rem;">Optimized Image Pipeline</h4>
-                        <p style="font-size: 0.825rem;">Intervention GD processor generating cropped WebP assets while stripping EXIF metadata and purging originals.</p>
+                    <BaseButton variant="ghost" size="sm" @click="toast.error('Transaction validation failed.')">
+                        Trigger Error Toast
+                    </BaseButton>
+                </div>
+            </div>
+
+            <!-- Section 2: Form Controls & Validation -->
+            <div class="card">
+                <h3 style="margin-bottom: var(--space-4);">Form Controls, Inputs &amp; Validation States</h3>
+
+                <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--space-4);">
+                    <BaseInput 
+                        v-model="sampleInput" 
+                        label="Standard Text Input" 
+                        placeholder="Enter item name..." 
+                        hint="Supports helper text below input"
+                    >
+                        <template #leading><Search :size="16" /></template>
+                    </BaseInput>
+
+                    <BaseInput 
+                        model-value="Invalid data input" 
+                        label="Validated Input (Error State)" 
+                        :error="sampleInputError" 
+                        required
+                    />
+
+                    <BaseSelect 
+                        v-model="sampleSelect" 
+                        label="Currency Selector" 
+                        :options="selectOptions" 
+                        hint="Dropdown select with accessible option keys"
+                    />
+
+                    <div class="form-group" style="justify-content: center;">
+                        <span class="form-label">Checkboxes &amp; Toggles</span>
+                        <BaseCheckbox v-model="sampleCheckbox" label="Enable automatic receipt printing on tender" />
+                        <BaseCheckbox :model-value="false" label="Disabled Option" disabled />
                     </div>
                 </div>
             </div>
-        </main>
 
-        <!-- Footer -->
-        <footer style="border-top: 1px solid var(--border-subtle); padding: 1.5rem 0; background-color: var(--bg-surface); text-align: center;">
-            <div class="container flex items-center justify-between" style="flex-wrap: wrap; gap: 1rem;">
-                <p style="font-size: 0.825rem;">
-                    <strong>{{ appName }}</strong> &bull; Production-Grade POS Foundation
-                </p>
-                <p style="font-size: 0.825rem; color: var(--text-muted);">
-                    Built with Laravel, Vue 3, Inertia.js &amp; TypeScript for Shared Hosting
-                </p>
+            <!-- Section 3: Semantic Alerts & Badges -->
+            <div class="card">
+                <h3 style="margin-bottom: var(--space-4);">Feedback, Alerts &amp; Status Badges</h3>
+
+                <div class="flex items-center gap-3" style="flex-wrap: wrap; margin-bottom: var(--space-4);">
+                    <BaseBadge variant="primary" dot>Primary</BaseBadge>
+                    <BaseBadge variant="success" dot>Active</BaseBadge>
+                    <BaseBadge variant="warning" dot>Pending</BaseBadge>
+                    <BaseBadge variant="danger" dot>Suspended</BaseBadge>
+                    <BaseBadge variant="info">Info Tag</BaseBadge>
+                    <BaseBadge variant="neutral">Draft</BaseBadge>
+                </div>
+
+                <div class="flex flex-col gap-2">
+                    <BaseAlert v-if="!alertDismissed" variant="info" title="Application Notice" dismissible @dismiss="alertDismissed = true">
+                        The design system adheres to shared hosting constraints: zero Redis dependencies, bundled CSS variables, and native session state.
+                    </BaseAlert>
+                    <BaseAlert variant="success" title="Theme Compatibility Verified">
+                        Every component dynamically reflects the primary accent color token and responds to light/dark mode toggles.
+                    </BaseAlert>
+                </div>
             </div>
-        </footer>
-    </div>
+
+            <!-- Section 4: Data Table with Loading & Empty States -->
+            <div class="card">
+                <div class="flex items-center justify-between" style="margin-bottom: var(--space-4); flex-wrap: wrap; gap: var(--space-2);">
+                    <div>
+                        <h3>Data Tables, Loading Skeletons &amp; Empty States</h3>
+                        <p style="font-size: 0.85rem;">Test how the table renders data rows, skeleton pulse animations, or empty states.</p>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <BaseButton 
+                            variant="secondary" 
+                            size="sm" 
+                            @click="isTableLoading = !isTableLoading"
+                        >
+                            {{ isTableLoading ? 'Show Table Data' : 'Test Loading State' }}
+                        </BaseButton>
+
+                        <BaseButton 
+                            variant="secondary" 
+                            size="sm" 
+                            @click="isTableEmpty = !isTableEmpty"
+                        >
+                            {{ isTableEmpty ? 'Show Data Rows' : 'Test Empty State' }}
+                        </BaseButton>
+                    </div>
+                </div>
+
+                <BaseTable 
+                    :loading="isTableLoading" 
+                    :empty="isTableEmpty" 
+                    empty-title="No Products in Catalog"
+                    empty-description="Get started by creating your first product or importing catalog data."
+                >
+                    <template #header>
+                        <tr>
+                            <th>SKU</th>
+                            <th>Product Description</th>
+                            <th>Category</th>
+                            <th>Unit Price</th>
+                            <th>Status</th>
+                            <th style="text-align: right;">Action</th>
+                        </tr>
+                    </template>
+
+                    <template #default>
+                        <tr v-for="item in tableRecords" :key="item.id">
+                            <td class="mono" style="font-weight: 500;">{{ item.id }}</td>
+                            <td style="font-weight: 500;">{{ item.name }}</td>
+                            <td>{{ item.category }}</td>
+                            <td class="mono">{{ item.price }}</td>
+                            <td>
+                                <BaseBadge :variant="item.variant" dot>{{ item.status }}</BaseBadge>
+                            </td>
+                            <td style="text-align: right;">
+                                <BaseButton variant="ghost" size="sm" @click="toast.info(`Inspecting ${item.id}`)">
+                                    View
+                                </BaseButton>
+                            </td>
+                        </tr>
+                    </template>
+
+                    <template #empty-action>
+                        <BaseButton variant="primary" size="sm" @click="isTableEmpty = false">
+                            <Plus :size="16" />
+                            <span>Add First Product</span>
+                        </BaseButton>
+                    </template>
+                </BaseTable>
+            </div>
+        </div>
+
+        <!-- Sample Modal Dialog -->
+        <BaseModal 
+            :show="isModalOpen" 
+            title="Sample Modal Dialog" 
+            size="md"
+            @close="isModalOpen = false"
+        >
+            <p style="margin-bottom: var(--space-4);">
+                This dialog demonstrates modal elevation, subtle background backdrop blur, responsive sizing, and keyboard <kbd style="background: var(--bg-subtle); padding: 2px 6px; border-radius: 4px; font-size: 0.8em;">Esc</kbd> key dismissal.
+            </p>
+
+            <BaseInput label="Dialog Input Field" placeholder="Type something to test focus trap..." />
+
+            <template #footer>
+                <BaseButton variant="secondary" size="sm" @click="isModalOpen = false">
+                    Cancel
+                </BaseButton>
+                <BaseButton variant="primary" size="sm" @click="() => { isModalOpen = false; toast.success('Dialog action confirmed.'); }">
+                    Confirm Action
+                </BaseButton>
+            </template>
+        </BaseModal>
+    </AppLayout>
 </template>

@@ -1,17 +1,17 @@
 import '../css/app.css';
 import { createApp, h, DefineComponent } from 'vue';
 import { createInertiaApp } from '@inertiajs/vue3';
+import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
+
+const appName = import.meta.env.VITE_APP_NAME || 'StoreFleet';
 
 createInertiaApp({
-    title: (title) => (title ? `${title} - BranchWise POS` : 'BranchWise POS'),
-    resolve: (name) => {
-        const pages = import.meta.glob<DefineComponent>('./Pages/**/*.vue', { eager: true });
-        const page = pages[`./Pages/${name}.vue`];
-        if (!page) {
-            throw new Error(`Inertia page not found: ./Pages/${name}.vue`);
-        }
-        return page;
-    },
+    title: (title) => (title ? `${title} - ${appName}` : appName),
+    resolve: (name) =>
+        resolvePageComponent(
+            `./Pages/${name}.vue`,
+            import.meta.glob<DefineComponent>('./Pages/**/*.vue')
+        ),
     setup({ el, App, props, plugin }) {
         createApp({ render: () => h(App, props) })
             .use(plugin)
