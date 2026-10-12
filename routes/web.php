@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Admin\BranchController;
 use App\Http\Controllers\Admin\BusinessSettingController;
+use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\RoleAssignmentController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Models\Branch;
@@ -69,6 +71,25 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/assignments/manage', [RoleAssignmentController::class, 'index'])->middleware('permission:roles.assign')->name('assignments.index');
         Route::post('/assignments', [RoleAssignmentController::class, 'store'])->middleware('permission:roles.assign')->name('assignments.store');
         Route::delete('/assignments/{assignment}', [RoleAssignmentController::class, 'destroy'])->middleware('permission:roles.assign')->name('assignments.destroy');
+    });
+
+    // Product Management (Catalog)
+    Route::prefix('admin/products')->name('admin.products.')->group(function () {
+        Route::get('/', [ProductController::class, 'index'])->middleware('permission:catalog.products.view')->name('index');
+        Route::get('/create', [ProductController::class, 'create'])->middleware('permission:catalog.products.create')->name('create');
+        Route::post('/', [ProductController::class, 'store'])->middleware('permission:catalog.products.create')->name('store');
+        Route::get('/{product}/edit', [ProductController::class, 'edit'])->middleware('permission:catalog.products.edit')->name('edit');
+        Route::match(['put', 'post'], '/{product}', [ProductController::class, 'update'])->middleware('permission:catalog.products.edit')->name('update');
+        Route::post('/{product}/toggle-active', [ProductController::class, 'toggleActive'])->middleware('permission:catalog.products.edit')->name('toggle-active');
+        Route::delete('/{product}', [ProductController::class, 'destroy'])->middleware('permission:catalog.products.delete')->name('destroy');
+    });
+
+    // Category Taxonomy Management
+    Route::prefix('admin/categories')->name('admin.categories.')->group(function () {
+        Route::get('/', [CategoryController::class, 'index'])->middleware('permission:catalog.categories.manage')->name('index');
+        Route::post('/', [CategoryController::class, 'store'])->middleware('permission:catalog.categories.manage')->name('store');
+        Route::put('/{category}', [CategoryController::class, 'update'])->middleware('permission:catalog.categories.manage')->name('update');
+        Route::delete('/{category}', [CategoryController::class, 'destroy'])->middleware('permission:catalog.categories.manage')->name('destroy');
     });
 
     // Sample branch-scoped protected route for testing cross-branch enforcement

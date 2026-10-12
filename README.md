@@ -121,7 +121,7 @@ Visit [http://localhost:8000/login](http://localhost:8000/login) to sign in.
 StoreFleet includes automated test coverage, static analysis, and code styling tools:
 
 ```bash
-# Run backend test suite (29 tests, 158 assertions, 100% passing)
+# Run backend test suite (67 tests, 328 assertions, 100% passing)
 php artisan test
 
 # Check PHP code formatting (Laravel Pint)
@@ -258,6 +258,28 @@ StoreFleet cleanly separates configuration into three distinct tiers:
 
 ---
 
+## Catalog Management & Product-Image Pipeline (Phase 6)
+
+1. **Catalog Domain Model**:
+   - **Stable Identifiers**: Public UUIDs and unique SKUs decoupled from auto-increment IDs.
+   - **Barcode Indexing**: Indexed primary barcodes on products and variant options.
+   - **Hierarchical Taxonomy**: Self-referencing category tree with full ancestor paths (e.g. `Apparel > Mens > Shirts`). Cannot delete categories with children or products.
+   - **Flexible Units & Tax Classes**: Standard units (`piece`, `kg`, `box`, etc.) and tax classes (`standard`, `reduced`, `exempt`).
+   - **Variant Support**: Sub-items with individual SKUs, barcodes, and pricing.
+   - **Historical Data Safety**: Products use soft-deletion to ensure historical sales orders, line items, and audit logs are never broken or cascade-deleted.
+2. **Optimized Image Pipeline**:
+   - Server-side validation via `finfo` and `getimagesize` (rejects spoofed extensions, oversized files, and dimension anomalies).
+   - EXIF orientation correction.
+   - Center-crop to 1:1 square aspect ratio.
+   - Resized to 256×256 pixels.
+   - Compressed to WebP (85 quality) with metadata stripped.
+   - Stored with collision-safe slug-hash filenames (`products/{slug}-{random}.webp`).
+   - Automated safe deletion of replaced images.
+   - Temporary processing files reliably cleaned up in `finally` blocks.
+   - Hosting extensions: `php-gd` (with WebP support) or `php-imagick`, with automated fallback to ImageMagick CLI binary (`magick`).
+
+---
+
 ## Roadmap
 
 - [x] **Phase 1: Application Foundation** (Laravel 12, Inertia.js 2, Vue 3, TypeScript, Custom Theme Tokens, Shared Hosting Pipeline)
@@ -265,8 +287,9 @@ StoreFleet cleanly separates configuration into three distinct tiers:
 - [x] **Phase 3: Authentication & Super Admin Provisioning** (Session-based auth, mandatory TOTP 2FA, rate-limiting, audit logs, CLI provisioning)
 - [x] **Phase 4: Multi-Branch & Identity Architecture (RBAC)** (Database roles & permissions, branch scoping, delegation validation, UI matrix editor)
 - [x] **Phase 5: Business Configuration, Branch Management & Settings** (Multi-scope settings, tax, currency, receipt overrides, branch switching)
-- [ ] **Phase 6: Catalog & Image Optimization** (Categories, Products, Variants, WebP Processing Pipeline with EXIF stripping)
+- [x] **Phase 6: Catalog & Image Optimization** (Categories, Products, Variants, WebP Processing Pipeline with EXIF stripping)
 - [ ] **Phase 7: POS Terminal & Checkout Engine** (Barcode scanner listener, reactive cart, multi-method/split payments, transaction safety with idempotency keys)
 - [ ] **Phase 8: Thermal Receipts & Sales History** (58mm/80mm thermal CSS printing, branch-isolated sales explorer)
 - [ ] **Phase 9: Quality Assurance & Deployment Verification** (Full integration test suite, deployment validation)
+
 

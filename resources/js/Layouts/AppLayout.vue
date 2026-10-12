@@ -77,11 +77,29 @@ const presetColors = [
 
 const navigation = computed(() => {
     const items = [
-        { name: 'Dashboard', href: '/', icon: LayoutDashboard, active: false },
+        { name: 'Dashboard', href: '/', icon: LayoutDashboard, active: page.url === '/' },
         { name: 'POS Terminal', href: '#pos-preview', icon: ShoppingCart, active: false },
-        { name: 'Products & Catalog', href: '#products', icon: Package, active: false },
-        { name: 'Sales & Receipts', href: '#sales', icon: ReceiptText, active: false },
     ];
+
+    if (can('catalog.products.view')) {
+        items.push({
+            name: 'Products & Catalog',
+            href: '/admin/products',
+            icon: Package,
+            active: page.url.startsWith('/admin/products'),
+        });
+    }
+
+    if (can('catalog.categories.manage')) {
+        items.push({
+            name: 'Categories',
+            href: '/admin/categories',
+            icon: Layers,
+            active: page.url.startsWith('/admin/categories'),
+        });
+    }
+
+    items.push({ name: 'Sales & Receipts', href: '#sales', icon: ReceiptText, active: false });
 
     if (can('branches.view')) {
         items.push({
