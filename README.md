@@ -121,7 +121,7 @@ Visit [http://localhost:8000/login](http://localhost:8000/login) to sign in.
 StoreFleet includes automated test coverage, static analysis, and code styling tools:
 
 ```bash
-# Run backend test suite (67 tests, 328 assertions, 100% passing)
+# Run backend test suite (83 tests, 391 assertions, 100% passing)
 php artisan test
 
 # Check PHP code formatting (Laravel Pint)
@@ -280,6 +280,28 @@ StoreFleet cleanly separates configuration into three distinct tiers:
 
 ---
 
+## Point of Sale (POS) Checkout Engine (Phase 7)
+
+StoreFleet features an authoritative, high-throughput POS checkout engine built for shared-hosting reliability:
+
+1. **Transaction Boundaries & Authoritative Arithmetic**:
+   - **Zero Trust Architecture**: The backend strictly ignores client-submitted line totals, discounts, and tax figures, recalculating every price, quantity, tax rate, and net total directly from authoritative database records.
+   - **Atomic Database Transactions**: All operations (sale header, item snapshots, payments, and audit logs) execute within an atomic `DB::transaction()`. If any step fails (e.g. payment deficit, concurrent price change, or constraint violation), the entire transaction rolls back completely.
+   - **Idempotency Safeguard**: Every checkout submission requires a client-generated `idempotency_key` backed by a unique database constraint. Duplicate submissions, browser refreshes, or rapid double-clicks return the original completed transaction rather than creating multiple sales or duplicate payments.
+2. **Immutable Line-Item Snapshots**:
+   - Records preserve product name, SKU, barcode, unit, unit price, cost price, tax rate, and line total at the exact moment of transaction, permanently decoupling sales records from future catalog edits or price updates.
+3. **Multi-Method Payment & Cash Change Engine**:
+   - Computes exact change due for cash transactions.
+   - Records external card/bank transfer transactions with reference notes (without claiming gateway processing).
+   - Validates that total payments equal or exceed the grand total.
+4. **Register Terminal Interface**:
+   - Hardware barcode scanner listener that captures emulated keystrokes and instantly adds products to cart on Enter.
+   - Real-time catalog search by Name, SKU, and Barcode.
+   - Cart loss prevention using browser `beforeunload` warning and local storage backup.
+   - Confirmation receipt modal with print trigger.
+
+---
+
 ## Roadmap
 
 - [x] **Phase 1: Application Foundation** (Laravel 12, Inertia.js 2, Vue 3, TypeScript, Custom Theme Tokens, Shared Hosting Pipeline)
@@ -288,8 +310,9 @@ StoreFleet cleanly separates configuration into three distinct tiers:
 - [x] **Phase 4: Multi-Branch & Identity Architecture (RBAC)** (Database roles & permissions, branch scoping, delegation validation, UI matrix editor)
 - [x] **Phase 5: Business Configuration, Branch Management & Settings** (Multi-scope settings, tax, currency, receipt overrides, branch switching)
 - [x] **Phase 6: Catalog & Image Optimization** (Categories, Products, Variants, WebP Processing Pipeline with EXIF stripping)
-- [ ] **Phase 7: POS Terminal & Checkout Engine** (Barcode scanner listener, reactive cart, multi-method/split payments, transaction safety with idempotency keys)
+- [x] **Phase 7: POS Terminal & Checkout Engine** (Barcode scanner listener, reactive cart, multi-method/split payments, transaction safety with idempotency keys)
 - [ ] **Phase 8: Thermal Receipts & Sales History** (58mm/80mm thermal CSS printing, branch-isolated sales explorer)
 - [ ] **Phase 9: Quality Assurance & Deployment Verification** (Full integration test suite, deployment validation)
+
 
 

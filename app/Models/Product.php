@@ -162,11 +162,10 @@ class Product extends Model
 
     /**
      * Check if product has historical sales transactions.
-     * Guaranteed safe compatibility hook for future sales modules.
+     * Guaranteed safe compatibility hook for sales modules.
      */
     public function hasHistoricalTransactions(): bool
     {
-        // Future sales tables (e.g. order_items, sale_items) check
-        return false;
+        return SaleItem::where('product_id', $this->id)->exists();
     }
 }

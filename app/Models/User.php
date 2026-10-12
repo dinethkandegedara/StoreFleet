@@ -136,6 +136,20 @@ class User extends Authenticatable
         return (bool) $this->is_active;
     }
 
+    public function isAuthorizedForBranch(int $branchId): bool
+    {
+        if ($this->isSuperAdmin() || $this->hasRole('business-owner')) {
+            return true;
+        }
+
+        return $this->branchUserRoles()
+            ->where(function ($q) use ($branchId) {
+                $q->where('branch_id', $branchId)
+                    ->orWhereNull('branch_id');
+            })
+            ->exists();
+    }
+
     public function hasTwoFactorEnabled(): bool
     {
         return ! empty($this->two_factor_secret);

@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\RoleAssignmentController;
 use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Pos\PosTerminalController;
 use App\Models\Branch;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
@@ -90,6 +91,13 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::post('/', [CategoryController::class, 'store'])->middleware('permission:catalog.categories.manage')->name('store');
         Route::put('/{category}', [CategoryController::class, 'update'])->middleware('permission:catalog.categories.manage')->name('update');
         Route::delete('/{category}', [CategoryController::class, 'destroy'])->middleware('permission:catalog.categories.manage')->name('destroy');
+    });
+
+    // Point of Sale (POS) Terminal & Checkout (Phase 7)
+    Route::prefix('pos')->name('pos.')->group(function () {
+        Route::get('/', [PosTerminalController::class, 'index'])->middleware('permission:pos.terminal.access')->name('terminal');
+        Route::get('/search', [PosTerminalController::class, 'search'])->middleware('permission:pos.terminal.access')->name('search');
+        Route::post('/checkout', [PosTerminalController::class, 'checkout'])->middleware('permission:pos.orders.checkout')->name('checkout');
     });
 
     // Sample branch-scoped protected route for testing cross-branch enforcement

@@ -78,8 +78,16 @@ const presetColors = [
 const navigation = computed(() => {
     const items = [
         { name: 'Dashboard', href: '/', icon: LayoutDashboard, active: page.url === '/' },
-        { name: 'POS Terminal', href: '#pos-preview', icon: ShoppingCart, active: false },
     ];
+
+    if (can('pos.terminal.access')) {
+        items.push({
+            name: 'POS Terminal',
+            href: '/pos',
+            icon: ShoppingCart,
+            active: page.url.startsWith('/pos'),
+        });
+    }
 
     if (can('catalog.products.view')) {
         items.push({
