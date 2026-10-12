@@ -74,6 +74,10 @@ class PermissionRegistrar
                 ['name' => 'Adjust Inventory', 'slug' => 'inventory.stock.adjust', 'action' => 'update', 'description' => 'Perform cycle counts and stock level adjustments'],
                 ['name' => 'Manage Transfers', 'slug' => 'inventory.transfers.manage', 'action' => 'manage', 'description' => 'Initiate and receive branch stock transfers'],
             ],
+            'settings' => [
+                ['name' => 'View Settings', 'slug' => 'settings.view', 'action' => 'view', 'description' => 'View business configuration and branding'],
+                ['name' => 'Edit Settings', 'slug' => 'settings.edit', 'action' => 'update', 'description' => 'Update business configuration, currency, tax, and receipts'],
+            ],
         ];
     }
 

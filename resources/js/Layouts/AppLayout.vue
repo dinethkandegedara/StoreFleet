@@ -35,13 +35,35 @@ interface Props {
 defineProps<Props>();
 
 const page = usePage<SharedPageProps>();
-const { theme, primaryColor, toggleTheme, setPrimaryColor, initTheme } = useTheme();
+const { theme, primaryColor, toggleTheme, applyTheme, setPrimaryColor, initTheme } = useTheme();
 const { can } = usePermission();
 
 const mobileMenuOpen = ref(false);
 
+const switchBranch = (branchId: number, closeDropdown: () => void) => {
+    closeDropdown();
+    router.post(`/switch-branch/${branchId}`);
+};
+
+const handleToggleTheme = () => {
+    toggleTheme();
+    if (page.props.auth?.user) {
+        router.post('/user/preference/theme', {
+            theme_preference: theme.value,
+        }, { preserveScroll: true, preserveState: true });
+    }
+};
+
 onMounted(() => {
     initTheme();
+
+    if (page.props.auth?.user?.theme_preference) {
+        applyTheme(page.props.auth.user.theme_preference as 'light' | 'dark');
+    }
+
+    if (page.props.business?.primary_color) {
+        setPrimaryColor(page.props.business.primary_color);
+    }
 });
 
 const presetColors = [
@@ -59,15 +81,31 @@ const navigation = computed(() => {
         { name: 'POS Terminal', href: '#pos-preview', icon: ShoppingCart, active: false },
         { name: 'Products & Catalog', href: '#products', icon: Package, active: false },
         { name: 'Sales & Receipts', href: '#sales', icon: ReceiptText, active: false },
-        { name: 'Branches', href: '#branches', icon: Store, active: false },
-        { name: 'System Settings', href: '#settings', icon: Settings, active: false },
     ];
+
+    if (can('branches.view')) {
+        items.push({
+            name: 'Branches',
+            href: '/admin/branches',
+            icon: Store,
+            active: false,
+        });
+    }
 
     if (can('roles.view')) {
         items.push({
             name: 'Roles & RBAC',
             href: '/admin/roles',
             icon: Shield,
+            active: false,
+        });
+    }
+
+    if (can('settings.view')) {
+        items.push({
+            name: 'System Settings',
+            href: '/admin/settings',
+            icon: Settings,
             active: false,
         });
     }
@@ -103,9 +141,9 @@ const logout = () => {
                     </div>
                     <div>
                         <span style="font-weight: 700; font-size: 1.05rem; display: block; line-height: 1.2;">
-                            {{ page.props.appName || 'StoreFleet' }}
+                            {{ page.props.business?.name || page.props.appName || 'StoreFleet' }}
                         </span>
-                        <span style="font-size: 0.75rem; color: var(--text-muted);">Admin Portal</span>
+                        <span style="font-size: 0.75rem; color: var(--text-muted);">{{ page.props.appName || 'StoreFleet' }} POS</span>
                     </div>
                 </div>
 
@@ -179,12 +217,37 @@ const logout = () => {
                         <Menu :size="18" />
                     </button>
 
-                    <!-- Active Branch Indicator -->
-                    <div class="flex items-center gap-2" style="background-color: var(--bg-subtle); padding: 0.25rem 0.75rem; border-radius: var(--radius-full); font-size: 0.8rem; border: 1px solid var(--border-subtle);">
-                        <Store :size="14" style="color: var(--primary);" />
-                        <span style="font-weight: 500;">Active Branch:</span>
-                        <strong style="color: var(--text-primary);">Main Store</strong>
-                    </div>
+                    <!-- Active Branch Dropdown Selector -->
+                    <BaseDropdown v-if="page.props.auth?.authorized_branches && page.props.auth.authorized_branches.length > 0" align="left" width="260px">
+                        <template #trigger="{ isOpen }">
+                            <button class="flex items-center gap-2" style="background-color: var(--bg-subtle); padding: 0.25rem 0.75rem; border-radius: var(--radius-full); font-size: 0.8rem; border: 1px solid var(--border-subtle); cursor: pointer;">
+                                <Store :size="14" style="color: var(--primary);" />
+                                <span style="font-weight: 500;">Active Branch:</span>
+                                <strong style="color: var(--text-primary);">
+                                    {{ page.props.auth.active_branch?.name || 'All Branches' }}
+                                </strong>
+                                <ChevronDown :size="12" />
+                            </button>
+                        </template>
+                        <template #default="{ close }">
+                            <div style="padding: 0.5rem 0.25rem;">
+                                <div style="font-size: 0.7rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; padding: 0 0.5rem 0.35rem;">
+                                    Switch Operating Branch
+                                </div>
+                                <button
+                                    v-for="branch in page.props.auth.authorized_branches"
+                                    :key="branch.id"
+                                    type="button"
+                                    class="dropdown-item flex items-center justify-between"
+                                    :style="{ fontWeight: branch.id === page.props.auth.active_branch?.id ? '700' : '500' }"
+                                    @click="switchBranch(branch.id, close)"
+                                >
+                                    <span>{{ branch.name }}</span>
+                                    <span class="mono" style="font-size: 0.75rem; color: var(--text-muted);">{{ branch.code }}</span>
+                                </button>
+                            </div>
+                        </template>
+                    </BaseDropdown>
                 </div>
 
                 <!-- Topbar Actions -->
@@ -217,9 +280,9 @@ const logout = () => {
                         </template>
                     </BaseDropdown>
 
-                    <!-- Light / Dark Theme Toggle -->
+                    <!-- Light / Dark Theme Toggle (Persisted to user preference) -->
                     <button 
-                        @click="toggleTheme" 
+                        @click="handleToggleTheme" 
                         class="btn btn-secondary btn-sm" 
                         :title="theme === 'dark' ? 'Switch to Light Theme' : 'Switch to Dark Theme'"
                         aria-label="Toggle theme"

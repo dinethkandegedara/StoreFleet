@@ -237,14 +237,36 @@ StoreFleet implements a database-driven, multi-branch Role-Based Access Control 
 
 ---
 
+## Business Configuration & Multi-Branch Management
+
+StoreFleet cleanly separates configuration into three distinct tiers:
+
+1. **Business-Wide Settings**:
+   - Merchant identity & logo (customizable and never hard-coded as the product name).
+   - Primary accent branding color (dynamically reflected across all application interfaces).
+   - Currency code, symbol, decimal precision, and formatting (thousands/decimal separators).
+   - Timezone and standard date/time formatting.
+   - POS Tax engine: Global tax rate, VAT registration numbers, and tax-inclusive/tax-exclusive pricing toggle.
+   - Default thermal receipt headers, footers, and logo options.
+2. **Branch-Specific Settings & Controlled Deactivation**:
+   - Location metadata: Branch codes, physical addresses, manager contacts, and store phones.
+   - Branch-specific receipt overrides: Custom headers and footers that override business defaults.
+   - Controlled deactivation safeguard: Refuses to deactivate the only remaining active branch.
+   - Authorized branch switching: Validates that employees are assigned to a branch before allowing session context switching.
+3. **User-Specific Preferences**:
+   - Independent light/dark mode preference saved per user account.
+
+---
+
 ## Roadmap
 
 - [x] **Phase 1: Application Foundation** (Laravel 12, Inertia.js 2, Vue 3, TypeScript, Custom Theme Tokens, Shared Hosting Pipeline)
 - [x] **Phase 2: Global Design System & Application Shell** (Tailwind-free Vanilla CSS tokens, AppLayout, PosLayout, reusable form controls & alerts)
 - [x] **Phase 3: Authentication & Super Admin Provisioning** (Session-based auth, mandatory TOTP 2FA, rate-limiting, audit logs, CLI provisioning)
 - [x] **Phase 4: Multi-Branch & Identity Architecture (RBAC)** (Database roles & permissions, branch scoping, delegation validation, UI matrix editor)
-- [ ] **Phase 5: Catalog & Image Optimization** (Categories, Products, Variants, WebP Processing Pipeline with EXIF stripping)
-- [ ] **Phase 6: POS Terminal & Checkout Engine** (Barcode scanner listener, reactive cart, multi-method/split payments, transaction safety with idempotency keys)
-- [ ] **Phase 7: Thermal Receipts & Sales History** (58mm/80mm thermal CSS printing, branch-isolated sales explorer)
-- [ ] **Phase 8: Quality Assurance & Deployment Verification** (Full integration test suite, deployment validation)
+- [x] **Phase 5: Business Configuration, Branch Management & Settings** (Multi-scope settings, tax, currency, receipt overrides, branch switching)
+- [ ] **Phase 6: Catalog & Image Optimization** (Categories, Products, Variants, WebP Processing Pipeline with EXIF stripping)
+- [ ] **Phase 7: POS Terminal & Checkout Engine** (Barcode scanner listener, reactive cart, multi-method/split payments, transaction safety with idempotency keys)
+- [ ] **Phase 8: Thermal Receipts & Sales History** (58mm/80mm thermal CSS printing, branch-isolated sales explorer)
+- [ ] **Phase 9: Quality Assurance & Deployment Verification** (Full integration test suite, deployment validation)
 
