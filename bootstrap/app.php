@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Middleware\EnsureHasPermission;
+use App\Http\Middleware\EnsureHasRole;
 use App\Http\Middleware\EnsureSuperAdmin;
 use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\HandleInertiaRequests;
@@ -23,6 +25,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'active' => EnsureUserIsActive::class,
             'super_admin' => EnsureSuperAdmin::class,
+            'permission' => EnsureHasPermission::class,
+            'role' => EnsureHasRole::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

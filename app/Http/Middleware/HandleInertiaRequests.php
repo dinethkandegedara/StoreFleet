@@ -52,6 +52,20 @@ class HandleInertiaRequests extends Middleware
                     'role' => $request->user()->role,
                     'is_super_admin' => $request->user()->isSuperAdmin(),
                 ] : null,
+                'permissions' => fn () => $request->user()
+                    ? $request->user()->getPermissions($request->session()->get('active_branch_id'))
+                    : [],
+                'roles' => fn () => $request->user()
+                    ? $request->user()->branchUserRoles()
+                        ->whereHas('role', fn ($q) => $q->where('is_active', true))
+                        ->with('role')
+                        ->get()
+                        ->pluck('role.slug')
+                        ->unique()
+                        ->values()
+                        ->all()
+                    : [],
+                'active_branch_id' => fn () => $request->session()->get('active_branch_id'),
             ],
         ];
     }

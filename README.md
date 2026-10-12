@@ -220,12 +220,29 @@ Do **not** upload the entire Laravel repository inside `public_html`. Keep appli
 
 ---
 
+---
+
+## Role-Based Access Control (RBAC) & Multi-Branch Architecture
+
+StoreFleet implements a database-driven, multi-branch Role-Based Access Control (RBAC) engine designed specifically for POS workloads on shared hosting:
+
+### Key Capabilities:
+- **Granular Permission Catalog**: Operations are grouped by module (`roles`, `branches`, `users`, `catalog`, `pos`, `sales`, `inventory`), resource, and action (`view`, `create`, `update`, `delete`, `manage`, `approve`).
+- **Extensible Module Registration**: Future modules (e.g., inventory transfers, supplier purchase orders) register permissions at runtime via `PermissionRegistrar::registerModulePermissions()` without rewriting core RBAC tables.
+- **Multi-Branch Scoping**: Staff can be assigned roles globally (`branch_id = null`) or scoped to specific branches (`branch_id = X`). A user can hold different roles across different branches (e.g. Branch Manager at Store A, Cashier at Store B).
+- **Privilege Escalation Prevention**: Administrators can only delegate permissions they personally hold. Attempts to grant unauthorized capabilities are rejected and logged to the audit log.
+- **Essential Access Protection**: System roles (`business-owner`, `branch-manager`, `cashier`) cannot be deleted or deactivated. The system strictly refuses to revoke the last active Business Owner.
+- **Atomic Cache Invalidation**: Permission caches are keyed with an atomic RBAC version counter (`storefleet_rbac_version`), ensuring instant cache invalidation on standard database/file cache drivers without Redis.
+- **Audit Logging**: Role creations, updates, duplications, status toggles, and user assignments are recorded in `audit_logs`.
+
+---
+
 ## Roadmap
 
 - [x] **Phase 1: Application Foundation** (Laravel 12, Inertia.js 2, Vue 3, TypeScript, Custom Theme Tokens, Shared Hosting Pipeline)
 - [x] **Phase 2: Global Design System & Application Shell** (Tailwind-free Vanilla CSS tokens, AppLayout, PosLayout, reusable form controls & alerts)
 - [x] **Phase 3: Authentication & Super Admin Provisioning** (Session-based auth, mandatory TOTP 2FA, rate-limiting, audit logs, CLI provisioning)
-- [ ] **Phase 4: Multi-Branch & Identity Architecture** (Roles & Permissions DB engine, Branch Switching & Middleware)
+- [x] **Phase 4: Multi-Branch & Identity Architecture (RBAC)** (Database roles & permissions, branch scoping, delegation validation, UI matrix editor)
 - [ ] **Phase 5: Catalog & Image Optimization** (Categories, Products, Variants, WebP Processing Pipeline with EXIF stripping)
 - [ ] **Phase 6: POS Terminal & Checkout Engine** (Barcode scanner listener, reactive cart, multi-method/split payments, transaction safety with idempotency keys)
 - [ ] **Phase 7: Thermal Receipts & Sales History** (58mm/80mm thermal CSS printing, branch-isolated sales explorer)

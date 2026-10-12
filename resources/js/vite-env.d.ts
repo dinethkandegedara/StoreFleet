@@ -24,6 +24,9 @@ export interface SharedPageProps {
     };
     auth: {
         user?: AuthUser | null;
+        permissions?: string[];
+        roles?: string[];
+        active_branch_id?: number | null;
     };
     [key: string]: unknown;
 }

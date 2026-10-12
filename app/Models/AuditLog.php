@@ -59,4 +59,14 @@ class AuditLog extends Model
             'created_at' => now(),
         ]);
     }
+
+    /**
+     * Record an audit event with optional User model.
+     */
+    public static function record(string $event, ?array $payload = null, User|int|null $user = null): self
+    {
+        $userId = $user instanceof User ? $user->id : $user;
+
+        return static::log($event, $userId, $payload);
+    }
 }

@@ -19,12 +19,14 @@ import {
     User as UserIcon,
     Layers,
     ChevronDown,
+    Shield,
     ShieldCheck,
     LogOut,
     LogIn
 } from 'lucide-vue-next';
 
 import type { SharedPageProps } from '@/vite-env';
+import { usePermission } from '@/Composables/usePermission';
 
 interface Props {
     title?: string;
@@ -34,6 +36,7 @@ defineProps<Props>();
 
 const page = usePage<SharedPageProps>();
 const { theme, primaryColor, toggleTheme, setPrimaryColor, initTheme } = useTheme();
+const { can } = usePermission();
 
 const mobileMenuOpen = ref(false);
 
@@ -59,6 +62,15 @@ const navigation = computed(() => {
         { name: 'Branches', href: '#branches', icon: Store, active: false },
         { name: 'System Settings', href: '#settings', icon: Settings, active: false },
     ];
+
+    if (can('roles.view')) {
+        items.push({
+            name: 'Roles & RBAC',
+            href: '/admin/roles',
+            icon: Shield,
+            active: false,
+        });
+    }
 
     if (page.props.auth?.user?.is_super_admin) {
         items.push({
