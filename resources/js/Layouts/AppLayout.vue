@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { usePage, Link } from '@inertiajs/vue3';
+import { ref, onMounted, computed } from 'vue';
+import { usePage, Link, router } from '@inertiajs/vue3';
 import { useTheme } from '@/Composables/useTheme';
 import ToastContainer from '@/Components/Feedback/ToastContainer.vue';
 import BaseDropdown from '@/Components/UI/BaseDropdown.vue';
@@ -18,8 +18,13 @@ import {
     X, 
     User as UserIcon,
     Layers,
-    ChevronDown
+    ChevronDown,
+    ShieldCheck,
+    LogOut,
+    LogIn
 } from 'lucide-vue-next';
+
+import type { SharedPageProps } from '@/vite-env';
 
 interface Props {
     title?: string;
@@ -27,7 +32,7 @@ interface Props {
 
 defineProps<Props>();
 
-const page = usePage();
+const page = usePage<SharedPageProps>();
 const { theme, primaryColor, toggleTheme, setPrimaryColor, initTheme } = useTheme();
 
 const mobileMenuOpen = ref(false);
@@ -45,14 +50,31 @@ const presetColors = [
     { name: 'Rose Accent', hex: '#e11d48' },
 ];
 
-const navigation = [
-    { name: 'Dashboard', href: '/', icon: LayoutDashboard, active: true },
-    { name: 'POS Terminal', href: '#pos-preview', icon: ShoppingCart, active: false },
-    { name: 'Products & Catalog', href: '#products', icon: Package, active: false },
-    { name: 'Sales & Receipts', href: '#sales', icon: ReceiptText, active: false },
-    { name: 'Branches', href: '#branches', icon: Store, active: false },
-    { name: 'System Settings', href: '#settings', icon: Settings, active: false },
-];
+const navigation = computed(() => {
+    const items = [
+        { name: 'Dashboard', href: '/', icon: LayoutDashboard, active: false },
+        { name: 'POS Terminal', href: '#pos-preview', icon: ShoppingCart, active: false },
+        { name: 'Products & Catalog', href: '#products', icon: Package, active: false },
+        { name: 'Sales & Receipts', href: '#sales', icon: ReceiptText, active: false },
+        { name: 'Branches', href: '#branches', icon: Store, active: false },
+        { name: 'System Settings', href: '#settings', icon: Settings, active: false },
+    ];
+
+    if (page.props.auth?.user?.is_super_admin) {
+        items.push({
+            name: 'Audit Logs',
+            href: '/admin/audit-logs',
+            icon: ShieldCheck,
+            active: false,
+        });
+    }
+
+    return items;
+});
+
+const logout = () => {
+    router.post('/logout');
+};
 </script>
 
 <template>
@@ -87,7 +109,7 @@ const navigation = [
 
             <!-- Navigation Links -->
             <nav class="sidebar-nav" aria-label="Main Navigation">
-                <a
+                <Link
                     v-for="item in navigation"
                     :key="item.name"
                     :href="item.href"
@@ -95,21 +117,39 @@ const navigation = [
                 >
                     <component :is="item.icon" :size="18" aria-hidden="true" />
                     <span>{{ item.name }}</span>
-                </a>
+                </Link>
             </nav>
 
-            <!-- Sidebar Footer -->
-            <div style="padding: var(--space-4); border-top: 1px solid var(--border-subtle); display: flex; align-items: center; gap: var(--space-3);">
-                <div style="width: 2rem; height: 2rem; border-radius: 50%; background-color: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center;">
-                    <UserIcon :size="16" />
+            <!-- Sidebar User / Auth Footer -->
+            <div style="padding: var(--space-4); border-top: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between; gap: var(--space-2);">
+                <div v-if="page.props.auth?.user" class="flex items-center gap-2" style="flex: 1; min-width: 0;">
+                    <div style="width: 2rem; height: 2rem; border-radius: 50%; background-color: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <UserIcon :size="16" />
+                    </div>
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="font-size: 0.825rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                            {{ page.props.auth.user.name }}
+                        </div>
+                        <div style="font-size: 0.725rem; color: var(--text-muted); text-transform: capitalize;">
+                            {{ page.props.auth.user.is_super_admin ? 'Super Admin' : page.props.auth.user.role }}
+                        </div>
+                    </div>
+                    <button 
+                        @click="logout" 
+                        class="btn btn-ghost btn-sm" 
+                        style="padding: 4px; color: var(--text-muted);" 
+                        title="Sign Out"
+                        aria-label="Sign out"
+                    >
+                        <LogOut :size="16" />
+                    </button>
                 </div>
-                <div style="flex: 1; min-width: 0;">
-                    <div style="font-size: 0.825rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                        Administrator
-                    </div>
-                    <div style="font-size: 0.725rem; color: var(--text-muted);">
-                        Super Admin
-                    </div>
+                <div v-else class="flex items-center justify-between w-full">
+                    <span style="font-size: 0.825rem; color: var(--text-muted);">Not signed in</span>
+                    <Link href="/login" class="btn btn-primary btn-sm">
+                        <LogIn :size="14" />
+                        <span>Sign In</span>
+                    </Link>
                 </div>
             </div>
         </aside>

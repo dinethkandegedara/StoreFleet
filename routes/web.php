@@ -24,3 +24,5 @@ Route::get('/', function () {
         'appEnv' => app()->environment(),
     ]);
 })->name('welcome');
+
+require __DIR__.'/auth.php';
