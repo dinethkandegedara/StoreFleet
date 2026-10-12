@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -136,6 +137,8 @@ class UserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        $currentUser = $request->user();
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
@@ -145,6 +148,9 @@ class UserController extends Controller
             'assignments.*.branch_id' => ['nullable', 'integer', 'exists:branches,id'],
             'assignments.*.role_id' => ['required', 'integer', 'exists:roles,id'],
         ]);
+
+        // Prevent privilege escalation: actor must be able to delegate every role
+        $this->validateAssignmentsAndDelegation($currentUser, $validated['assignments'] ?? []);
 
         DB::transaction(function () use ($validated, $request) {
             $user = User::create([
@@ -241,6 +247,12 @@ class UserController extends Controller
             return back()->with('error', 'You cannot deactivate your own active session account.');
         }
 
+        // Prevent privilege escalation: actor must be able to delegate every role
+        $this->validateAssignmentsAndDelegation($currentUser, $validated['assignments'] ?? [], $user);
+
+        // Protection against removing or deactivating the last active business owner
+        $this->validateLastBusinessOwnerPreservation($user, (bool) $validated['is_active'], $validated['assignments'] ?? []);
+
         DB::transaction(function () use ($user, $validated, $request) {
             $user->name = $validated['name'];
             $user->email = $validated['email'];
@@ -296,6 +308,19 @@ class UserController extends Controller
             abort(403, 'Only a Super Admin can modify the status of Super Admin accounts.');
         }
 
+        // Guard: Cannot deactivate the last active business owner
+        if ($user->is_active && $user->branchUserRoles()->whereHas('role', fn ($q) => $q->where('slug', 'business-owner'))->exists()) {
+            $ownerRole = Role::where('slug', 'business-owner')->first();
+            $otherActiveOwnersCount = BranchUserRole::where('role_id', $ownerRole?->id)
+                ->where('user_id', '!=', $user->id)
+                ->whereHas('user', fn ($q) => $q->where('is_active', true))
+                ->count();
+
+            if ($otherActiveOwnersCount === 0) {
+                return back()->with('error', 'Cannot deactivate the last active Business Owner. Essential administrative access must be preserved.');
+            }
+        }
+
         $user->is_active = ! $user->is_active;
         $user->save();
 
@@ -310,5 +335,88 @@ class UserController extends Controller
         ], $currentUser);
 
         return back()->with('success', "Staff account for \"{$user->name}\" has been {$statusStr}.");
+    }
+
+    /**
+     * Validate that the current user has authority to delegate each assigned role.
+     *
+     * @param  array<int, array<string, mixed>>  $assignments
+     *
+     * @throws ValidationException
+     */
+    protected function validateAssignmentsAndDelegation(User $currentUser, array $assignments, ?User $targetUser = null): void
+    {
+        if ($targetUser?->isSuperAdmin() && ! empty($assignments)) {
+            throw ValidationException::withMessages([
+                'assignments' => 'Platform Super Admins cannot be assigned business-level branch roles.',
+            ]);
+        }
+
+        foreach ($assignments as $idx => $assign) {
+            $role = Role::with('permissions')->find($assign['role_id']);
+            if (! $role) {
+                continue;
+            }
+
+            $branchId = ! empty($assign['branch_id']) ? (int) $assign['branch_id'] : null;
+            $rolePermissions = $role->permissions->pluck('slug')->all();
+
+            if (! $this->permissionRegistrar->canDelegate($currentUser, $rolePermissions, $branchId)) {
+                AuditLog::record('unauthorized_role_delegation_attempt', [
+                    'target_user_id' => $targetUser?->id,
+                    'role_slug' => $role->slug,
+                    'branch_id' => $branchId,
+                ], $currentUser);
+
+                throw ValidationException::withMessages([
+                    "assignments.{$idx}.role_id" => "Privilege escalation rejected: You cannot assign role '{$role->name}' with permissions you do not possess.",
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Validate that changes do not leave the system without any active Business Owner.
+     *
+     * @param  array<int, array<string, mixed>>  $newAssignments
+     *
+     * @throws ValidationException
+     */
+    protected function validateLastBusinessOwnerPreservation(User $targetUser, bool $targetWillBeActive, array $newAssignments): void
+    {
+        $isCurrentlyActiveOwner = $targetUser->is_active && $targetUser->branchUserRoles()
+            ->whereHas('role', fn ($q) => $q->where('slug', 'business-owner'))
+            ->exists();
+
+        if (! $isCurrentlyActiveOwner) {
+            return;
+        }
+
+        $willStillBeOwner = false;
+        if ($targetWillBeActive) {
+            $ownerRole = Role::where('slug', 'business-owner')->first();
+            if ($ownerRole) {
+                foreach ($newAssignments as $assign) {
+                    if ((int) $assign['role_id'] === $ownerRole->id) {
+                        $willStillBeOwner = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (! $willStillBeOwner) {
+            $ownerRole = Role::where('slug', 'business-owner')->first();
+            $otherActiveOwnersCount = BranchUserRole::where('role_id', $ownerRole?->id)
+                ->where('user_id', '!=', $targetUser->id)
+                ->whereHas('user', fn ($q) => $q->where('is_active', true))
+                ->count();
+
+            if ($otherActiveOwnersCount === 0) {
+                throw ValidationException::withMessages([
+                    'is_active' => 'Cannot deactivate or remove the role of the last active Business Owner. Essential administrative access must be preserved.',
+                ]);
+            }
+        }
     }
 }

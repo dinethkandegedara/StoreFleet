@@ -34,11 +34,12 @@ class Setting extends Model
         Cache::forget($cacheKey);
     }
 
-    public static function getCacheKey(string $scope, ?int $scopeId): string
+    public static function getCacheKey(?string $scope = 'business', ?int $scopeId = null): string
     {
+        $scopeName = $scope ?: 'business';
         $idPart = $scopeId !== null ? (string) $scopeId : 'global';
 
-        return "settings_{$scope}_{$idPart}";
+        return "settings_{$scopeName}_{$idPart}";
     }
 
     /**

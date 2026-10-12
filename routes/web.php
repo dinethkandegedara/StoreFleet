@@ -108,7 +108,7 @@ Route::middleware(['auth', 'active'])->group(function () {
     // Point of Sale (POS) Terminal & Checkout (Phase 7)
     Route::prefix('pos')->name('pos.')->group(function () {
         Route::get('/', [PosTerminalController::class, 'index'])->middleware('permission:pos.terminal.access')->name('terminal');
-        Route::get('/search', [PosTerminalController::class, 'search'])->middleware('permission:pos.terminal.access')->name('search');
+        Route::get('/search', [PosTerminalController::class, 'search'])->middleware(['permission:pos.terminal.access', 'throttle:120,1'])->name('search');
         Route::post('/checkout', [PosTerminalController::class, 'checkout'])->middleware('permission:pos.orders.checkout')->name('checkout');
     });
 

@@ -7,6 +7,7 @@ use App\Models\AuditLog;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -31,6 +32,23 @@ class PasswordResetLinkController extends Controller
         $request->validate([
             'email' => ['required', 'email'],
         ]);
+
+        $throttleKey = 'password-reset|'.$request->ip();
+
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+
+            AuditLog::log('auth.password_reset_throttled', null, [
+                'email' => $request->input('email'),
+                'available_in_seconds' => $seconds,
+            ], $request);
+
+            throw ValidationException::withMessages([
+                'email' => "Too many password reset requests. Please try again in {$seconds} seconds.",
+            ]);
+        }
+
+        RateLimiter::hit($throttleKey, 60);
 
         $status = Password::sendResetLink(
             $request->only('email')

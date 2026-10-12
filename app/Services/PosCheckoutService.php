@@ -190,6 +190,13 @@ class PosCheckoutService
             $method = (string) ($payment['payment_method'] ?? 'cash');
             $amount = round((float) ($payment['amount'] ?? 0), 2);
 
+            $enabledKey = "payment_{$method}_enabled";
+            if (array_key_exists($enabledKey, $settings) && ! (bool) $settings[$enabledKey]) {
+                throw ValidationException::withMessages([
+                    "payments.{$pIdx}.payment_method" => "Payment method '{$method}' is currently disabled in business configuration.",
+                ]);
+            }
+
             if ($amount <= 0 && $finalTotal > 0) {
                 throw ValidationException::withMessages([
                     "payments.{$pIdx}.amount" => 'Payment amount must be greater than zero.',

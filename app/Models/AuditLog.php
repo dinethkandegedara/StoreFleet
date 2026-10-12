@@ -46,8 +46,12 @@ class AuditLog extends Model
             $safePayload['password_confirmation'],
             $safePayload['current_password'],
             $safePayload['two_factor_secret'],
+            $safePayload['two_factor_recovery_codes'],
             $safePayload['recovery_code'],
-            $safePayload['code']
+            $safePayload['code'],
+            $safePayload['token'],
+            $safePayload['remember_token'],
+            $safePayload['secret']
         );
 
         return static::create([

@@ -121,7 +121,7 @@ Visit [http://localhost:8000/login](http://localhost:8000/login) to sign in.
 StoreFleet includes automated test coverage, static analysis, and code styling tools:
 
 ```bash
-# Run backend test suite (115 tests, 790 assertions, 100% passing)
+# Run backend test suite (126 tests, 866 assertions, 100% passing)
 php artisan test
 
 # Check PHP code formatting (Laravel Pint)

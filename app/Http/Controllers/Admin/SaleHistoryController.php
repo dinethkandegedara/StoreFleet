@@ -161,8 +161,24 @@ class SaleHistoryController extends Controller
 
         $sales = $query->paginate(15)->withQueryString();
 
+        // Pre-evaluate user cancellation rights to prevent N+1 queries in paginated transform loop
+        $isGlobalOwner = $user->isSuperAdmin() || $user->hasRole('business-owner');
+        $branchCancelAuth = [];
+        $canCancelBranch = function (?int $branchId) use ($user, $isGlobalOwner, &$branchCancelAuth): bool {
+            if ($isGlobalOwner) {
+                return true;
+            }
+            $key = $branchId ?? 0;
+            if (! array_key_exists($key, $branchCancelAuth)) {
+                $branchCancelAuth[$key] = $user->hasPermission('sales.orders.cancel', $branchId)
+                    || $user->hasPermission('pos.orders.void', $branchId);
+            }
+
+            return $branchCancelAuth[$key];
+        };
+
         // Transform paginated sales
-        $sales->through(function (Sale $sale) use ($user) {
+        $sales->through(function (Sale $sale) use ($canCancelBranch) {
             return [
                 'id' => $sale->id,
                 'uuid' => $sale->uuid,
@@ -192,7 +208,7 @@ class SaleHistoryController extends Controller
                 'cancelled_at_formatted' => $sale->cancelled_at?->format('M d, Y h:i A'),
                 'cancelled_by_name' => $sale->canceller?->name,
                 'cancellation_reason' => $sale->cancellation_reason,
-                'can_cancel' => $sale->canBeCancelled() && $this->userCanCancel($user, $sale->branch_id),
+                'can_cancel' => $sale->canBeCancelled() && $canCancelBranch($sale->branch_id),
             ];
         });
 
