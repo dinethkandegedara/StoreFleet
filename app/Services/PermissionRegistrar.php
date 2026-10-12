@@ -66,6 +66,7 @@ class PermissionRegistrar
             ],
             'sales' => [
                 ['name' => 'View Sales History', 'slug' => 'sales.orders.view', 'action' => 'view', 'description' => 'View orders and branch transaction history'],
+                ['name' => 'Cancel Sales', 'slug' => 'sales.orders.cancel', 'action' => 'approve', 'description' => 'Authorize cancellation of completed sales orders'],
                 ['name' => 'Process Refunds', 'slug' => 'sales.refunds.process', 'action' => 'approve', 'description' => 'Approve and issue payment refunds'],
                 ['name' => 'View Reports', 'slug' => 'sales.reports.view', 'action' => 'view', 'description' => 'View sales analytics and revenue summaries'],
             ],

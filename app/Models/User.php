@@ -90,6 +90,11 @@ class User extends Authenticatable
             ->withTimestamps();
     }
 
+    public function sales(): HasMany
+    {
+        return $this->hasMany(Sale::class);
+    }
+
     public function hasPermission(string $permission, ?int $branchId = null): bool
     {
         return app(PermissionRegistrar::class)->userHasPermission($this, $permission, $branchId);

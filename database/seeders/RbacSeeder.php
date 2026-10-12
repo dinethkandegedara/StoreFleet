@@ -68,6 +68,7 @@ class RbacSeeder extends Seeder
             'pos.discounts.apply',
             'pos.orders.void',
             'sales.orders.view',
+            'sales.orders.cancel',
             'sales.refunds.process',
             'sales.reports.view',
             'inventory.stock.view',

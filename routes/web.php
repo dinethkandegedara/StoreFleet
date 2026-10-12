@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\RoleAssignmentController;
 use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\SaleHistoryController;
 use App\Http\Controllers\Pos\PosTerminalController;
 use App\Models\Branch;
 use Illuminate\Support\Facades\DB;
@@ -98,6 +99,14 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/', [PosTerminalController::class, 'index'])->middleware('permission:pos.terminal.access')->name('terminal');
         Route::get('/search', [PosTerminalController::class, 'search'])->middleware('permission:pos.terminal.access')->name('search');
         Route::post('/checkout', [PosTerminalController::class, 'checkout'])->middleware('permission:pos.orders.checkout')->name('checkout');
+    });
+
+    // Sales History, Detail Views, Printable Receipts & Cancellation (Phase 8)
+    Route::prefix('admin/sales')->name('admin.sales.')->group(function () {
+        Route::get('/', [SaleHistoryController::class, 'index'])->middleware('permission:sales.orders.view')->name('index');
+        Route::get('/{sale}', [SaleHistoryController::class, 'show'])->middleware('permission:sales.orders.view')->name('show');
+        Route::get('/{sale}/receipt', [SaleHistoryController::class, 'receipt'])->middleware('permission:sales.orders.view')->name('receipt');
+        Route::post('/{sale}/cancel', [SaleHistoryController::class, 'cancel'])->name('cancel');
     });
 
     // Sample branch-scoped protected route for testing cross-branch enforcement

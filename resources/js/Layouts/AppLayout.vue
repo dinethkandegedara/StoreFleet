@@ -107,14 +107,21 @@ const navigation = computed(() => {
         });
     }
 
-    items.push({ name: 'Sales & Receipts', href: '#sales', icon: ReceiptText, active: false });
+    if (can('sales.orders.view')) {
+        items.push({
+            name: 'Sales & Receipts',
+            href: '/admin/sales',
+            icon: ReceiptText,
+            active: page.url.startsWith('/admin/sales'),
+        });
+    }
 
     if (can('branches.view')) {
         items.push({
             name: 'Branches',
             href: '/admin/branches',
             icon: Store,
-            active: false,
+            active: page.url.startsWith('/admin/branches'),
         });
     }
 
@@ -123,7 +130,7 @@ const navigation = computed(() => {
             name: 'Roles & RBAC',
             href: '/admin/roles',
             icon: Shield,
-            active: false,
+            active: page.url.startsWith('/admin/roles'),
         });
     }
 
@@ -132,7 +139,7 @@ const navigation = computed(() => {
             name: 'System Settings',
             href: '/admin/settings',
             icon: Settings,
-            active: false,
+            active: page.url.startsWith('/admin/settings'),
         });
     }
 
@@ -141,7 +148,7 @@ const navigation = computed(() => {
             name: 'Audit Logs',
             href: '/admin/audit-logs',
             icon: ShieldCheck,
-            active: false,
+            active: page.url.startsWith('/admin/audit-logs'),
         });
     }
 

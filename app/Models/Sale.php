@@ -28,16 +28,21 @@ class Sale extends Model
         'notes',
         'idempotency_key',
         'completed_at',
+        'cancelled_at',
+        'cancelled_by',
+        'cancellation_reason',
     ];
 
     protected $casts = [
         'branch_id' => 'integer',
         'user_id' => 'integer',
+        'cancelled_by' => 'integer',
         'subtotal' => 'decimal:2',
         'discount_total' => 'decimal:2',
         'tax_total' => 'decimal:2',
         'total_amount' => 'decimal:2',
         'completed_at' => 'datetime',
+        'cancelled_at' => 'datetime',
     ];
 
     protected static function boot()
@@ -65,6 +70,30 @@ class Sale extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * User who authorized and performed the cancellation.
+     */
+    public function canceller(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'cancelled_by');
+    }
+
+    /**
+     * Check if the sale is cancelled.
+     */
+    public function isCancelled(): bool
+    {
+        return $this->status === 'cancelled' || ! is_null($this->cancelled_at);
+    }
+
+    /**
+     * Check if the sale can be cancelled.
+     */
+    public function canBeCancelled(): bool
+    {
+        return ! $this->isCancelled();
     }
 
     /**

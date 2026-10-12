@@ -121,7 +121,7 @@ Visit [http://localhost:8000/login](http://localhost:8000/login) to sign in.
 StoreFleet includes automated test coverage, static analysis, and code styling tools:
 
 ```bash
-# Run backend test suite (83 tests, 391 assertions, 100% passing)
+# Run backend test suite (102 tests, 682 assertions, 100% passing)
 php artisan test
 
 # Check PHP code formatting (Laravel Pint)
@@ -302,6 +302,24 @@ StoreFleet features an authoritative, high-throughput POS checkout engine built 
 
 ---
 
+## Sales History, Thermal Receipts & Cancellation Workflow (Phase 8)
+
+1. **Permission-Protected Sales History (`sales.orders.view`)**:
+   - **Branch Isolation**: Cashiers and managers only access transactions originating from their assigned branches. Platform Super Admins and Business Owners retain cross-branch visibility.
+   - **Multi-Parameter Search & Filtering**: Fast querying by sale number, customer identity, cashier user, payment method (cash, card, bank transfer, other), date range, and lifecycle status (`completed`, `cancelled`).
+   - **Server-Side Pagination**: Efficient indexed database queries (`[branch_id, completed_at]`, `[user_id, completed_at]`, `status`) preserving active query parameters.
+2. **Printer-Friendly Thermal Receipts**:
+   - **Hardware-Agnostic Layout**: Formatted for standard 80mm/58mm thermal rolls and standard browser print dialogs (`@media print` CSS), avoiding any proprietary external print server dependencies.
+   - **Configured Identity & Branding**: Incorporates tenant business name, logo, branch contact details, sale number, timestamp, cashier name, line-item snapshots, subtotal, taxes, discounts, tender details, and change due.
+   - **Historical Snapshot Integrity**: Receipts strictly read from persisted `sale_items` and `sale_payments` snapshot records, guaranteeing that subsequent catalog price shifts or taxonomy edits never distort historical receipts.
+3. **Authorized Cancellation Workflow**:
+   - **No Silent Erasure**: Completed transactions are never deleted, overwritten, or wiped.
+   - **Permission Boundary**: Requires explicit authorization (`sales.orders.cancel` or `pos.orders.void`) within the authorized branch context.
+   - **Mandatory Reason & Audit Trail**: Requires a non-empty cancellation rationale and records an immutable `sale.cancelled` record in `audit_logs` tracking timestamp, operator, and reason.
+   - **Status Reflection**: Immediately marks status as `cancelled` with prominent visual indicator banners and disabled re-cancellation guards.
+
+---
+
 ## Roadmap
 
 - [x] **Phase 1: Application Foundation** (Laravel 12, Inertia.js 2, Vue 3, TypeScript, Custom Theme Tokens, Shared Hosting Pipeline)
@@ -311,7 +329,7 @@ StoreFleet features an authoritative, high-throughput POS checkout engine built 
 - [x] **Phase 5: Business Configuration, Branch Management & Settings** (Multi-scope settings, tax, currency, receipt overrides, branch switching)
 - [x] **Phase 6: Catalog & Image Optimization** (Categories, Products, Variants, WebP Processing Pipeline with EXIF stripping)
 - [x] **Phase 7: POS Terminal & Checkout Engine** (Barcode scanner listener, reactive cart, multi-method/split payments, transaction safety with idempotency keys)
-- [ ] **Phase 8: Thermal Receipts & Sales History** (58mm/80mm thermal CSS printing, branch-isolated sales explorer)
+- [x] **Phase 8: Sales History, Thermal Receipts & Cancellation Workflow** (Branch-scoped transaction explorer, multi-parameter search/filters, immutable snapshot views, 80mm/58mm thermal browser-printable receipt engine, authorized cancellation audit workflow)
 - [ ] **Phase 9: Quality Assurance & Deployment Verification** (Full integration test suite, deployment validation)
 
 
