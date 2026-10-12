@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\RoleAssignmentController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SaleHistoryController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Pos\PosTerminalController;
 use App\Models\Branch;
 use Illuminate\Support\Facades\DB;
@@ -73,6 +74,16 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/assignments/manage', [RoleAssignmentController::class, 'index'])->middleware('permission:roles.assign')->name('assignments.index');
         Route::post('/assignments', [RoleAssignmentController::class, 'store'])->middleware('permission:roles.assign')->name('assignments.store');
         Route::delete('/assignments/{assignment}', [RoleAssignmentController::class, 'destroy'])->middleware('permission:roles.assign')->name('assignments.destroy');
+    });
+
+    // Staff & User Account Management (Phase 9)
+    Route::prefix('admin/users')->name('admin.users.')->group(function () {
+        Route::get('/', [UserController::class, 'index'])->middleware('permission:users.view')->name('index');
+        Route::get('/create', [UserController::class, 'create'])->middleware('permission:users.create')->name('create');
+        Route::post('/', [UserController::class, 'store'])->middleware('permission:users.create')->name('store');
+        Route::get('/{user}/edit', [UserController::class, 'edit'])->middleware('permission:users.edit')->name('edit');
+        Route::put('/{user}', [UserController::class, 'update'])->middleware('permission:users.edit')->name('update');
+        Route::post('/{user}/toggle-active', [UserController::class, 'toggleActive'])->middleware('permission:users.deactivate')->name('toggle-active');
     });
 
     // Product Management (Catalog)

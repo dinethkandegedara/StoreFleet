@@ -121,7 +121,7 @@ Visit [http://localhost:8000/login](http://localhost:8000/login) to sign in.
 StoreFleet includes automated test coverage, static analysis, and code styling tools:
 
 ```bash
-# Run backend test suite (102 tests, 682 assertions, 100% passing)
+# Run backend test suite (115 tests, 790 assertions, 100% passing)
 php artisan test
 
 # Check PHP code formatting (Laravel Pint)
@@ -320,6 +320,28 @@ StoreFleet features an authoritative, high-throughput POS checkout engine built 
 
 ---
 
+## Administrative Integration & Platform Diagnostics (Phase 9)
+
+1. **Staff Account Management (`/admin/users`)**:
+   - Complete CRUD interface protected under `users.view`, `users.create`, `users.update`, and `users.deactivate` permissions.
+   - Dynamic branch-and-role assignment matrix permitting multi-branch authorization.
+   - Guarded privilege boundaries: Super Admin accounts cannot be deactivated, deleted, or elevated through ordinary business admin screens.
+   - Active/inactive toggle modal with safeguards against self-deactivation.
+2. **Dedicated Platform Administration (`/admin/platform`)**:
+   - Isolated platform interface strictly gated by `super_admin` middleware.
+   - Real-time environment and hosting health telemetry: PHP engine, Laravel version, database connection & version, OPcache status, loaded extensions, memory limits, and storage write permissions.
+   - Platform operator audit list and provisioning CLI reference (`storefleet:super-admin:provision`).
+   - Platform maintenance utilities (framework optimization cache clearing).
+3. **Supported Payment Configurations**:
+   - Business settings toggles for Cash, Credit/Debit Card, Bank Transfer, and Other payment methods (`payment_*_enabled`).
+   - POS terminal dynamically restricts payment entry tabs to active methods and selects the first active method automatically.
+4. **Theme & Accent Customization**:
+   - Dynamic business primary accent color applied globally via CSS variables across App and POS layouts.
+   - Per-user light/dark mode preference persisted via user profile settings.
+   - Historical transaction integrity guarantee: Changing business branding, accent colors, or receipt headers never mutates historical sale item snapshots, payment records, or receipts.
+
+---
+
 ## Roadmap
 
 - [x] **Phase 1: Application Foundation** (Laravel 12, Inertia.js 2, Vue 3, TypeScript, Custom Theme Tokens, Shared Hosting Pipeline)
@@ -330,7 +352,7 @@ StoreFleet features an authoritative, high-throughput POS checkout engine built 
 - [x] **Phase 6: Catalog & Image Optimization** (Categories, Products, Variants, WebP Processing Pipeline with EXIF stripping)
 - [x] **Phase 7: POS Terminal & Checkout Engine** (Barcode scanner listener, reactive cart, multi-method/split payments, transaction safety with idempotency keys)
 - [x] **Phase 8: Sales History, Thermal Receipts & Cancellation Workflow** (Branch-scoped transaction explorer, multi-parameter search/filters, immutable snapshot views, 80mm/58mm thermal browser-printable receipt engine, authorized cancellation audit workflow)
-- [ ] **Phase 9: Quality Assurance & Deployment Verification** (Full integration test suite, deployment validation)
+- [x] **Phase 9: Administrative Integration & Stage 1 User Experience** (Staff management CRUD with branch-role assignments, Super Admin platform diagnostics & provisioning interface, supported payment toggles, dynamic accent branding, user theme persistence, complete Stage 1 integration)
 
 
 

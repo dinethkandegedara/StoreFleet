@@ -62,6 +62,10 @@ class BusinessSettingController extends Controller
             'receipt_header' => ['nullable', 'string', 'max:1000'],
             'receipt_footer' => ['nullable', 'string', 'max:1000'],
             'receipt_show_logo' => ['required', 'boolean'],
+            'payment_cash_enabled' => ['sometimes', 'boolean'],
+            'payment_card_enabled' => ['sometimes', 'boolean'],
+            'payment_bank_transfer_enabled' => ['sometimes', 'boolean'],
+            'payment_other_enabled' => ['sometimes', 'boolean'],
             'logo' => ['nullable', 'image', 'max:2048', 'mimes:jpg,jpeg,png,webp,svg'],
         ]);
 

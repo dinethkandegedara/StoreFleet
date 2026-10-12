@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 import { useTheme } from '@/Composables/useTheme';
 import ToastContainer from '@/Components/Feedback/ToastContainer.vue';
 import { 
@@ -24,7 +24,8 @@ withDefaults(defineProps<Props>(), {
     cashierName: 'Cashier 01',
 });
 
-const { theme, toggleTheme, initTheme } = useTheme();
+const page = usePage();
+const { theme, toggleTheme, initTheme, setPrimaryColor } = useTheme();
 const currentTime = ref('');
 let timer: number | undefined;
 
@@ -35,6 +36,9 @@ const updateClock = () => {
 
 onMounted(() => {
     initTheme();
+    if ((page.props as any).business?.primary_color) {
+        setPrimaryColor((page.props as any).business.primary_color);
+    }
     updateClock();
     timer = window.setInterval(updateClock, 1000);
 });

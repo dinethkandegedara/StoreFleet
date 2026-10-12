@@ -16,7 +16,8 @@ import {
     Percent, 
     Palette, 
     CheckCircle2,
-    Upload
+    Upload,
+    CreditCard
 } from 'lucide-vue-next';
 
 interface Props {
@@ -48,13 +49,17 @@ interface Props {
         receipt_header?: string | null;
         receipt_footer?: string | null;
         receipt_show_logo: boolean;
+        payment_cash_enabled?: boolean;
+        payment_card_enabled?: boolean;
+        payment_bank_transfer_enabled?: boolean;
+        payment_other_enabled?: boolean;
     };
     timezones: string[];
 }
 
 const props = defineProps<Props>();
 
-const activeTab = ref<'branding' | 'address' | 'currency' | 'tax' | 'receipt'>('branding');
+const activeTab = ref<'branding' | 'address' | 'currency' | 'tax' | 'receipt' | 'payments'>('branding');
 
 const form = useForm({
     business_name: props.settings.business_name || '',
@@ -83,6 +88,10 @@ const form = useForm({
     receipt_header: props.settings.receipt_header || '',
     receipt_footer: props.settings.receipt_footer || '',
     receipt_show_logo: props.settings.receipt_show_logo ?? true,
+    payment_cash_enabled: props.settings.payment_cash_enabled ?? true,
+    payment_card_enabled: props.settings.payment_card_enabled ?? true,
+    payment_bank_transfer_enabled: props.settings.payment_bank_transfer_enabled ?? true,
+    payment_other_enabled: props.settings.payment_other_enabled ?? true,
     logo: null as File | null,
 });
 
@@ -197,6 +206,14 @@ const submit = () => {
                 >
                     <Receipt :size="15" />
                     <span>Thermal Receipts</span>
+                </button>
+                <button
+                    type="button"
+                    :class="['btn btn-sm', activeTab === 'payments' ? 'btn-primary' : 'btn-ghost']"
+                    @click="activeTab = 'payments'"
+                >
+                    <CreditCard :size="15" />
+                    <span>Payment Methods</span>
                 </button>
             </div>
 
@@ -495,6 +512,58 @@ const submit = () => {
                             <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; display: block;">
                                 Displayed at the bottom of customer receipts.
                             </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 6. Supported Payment Methods Tab -->
+                <div v-show="activeTab === 'payments'" class="card" style="margin-bottom: var(--space-6);">
+                    <h2 style="font-size: 1.2rem; font-weight: 600; color: var(--text-primary); margin-bottom: var(--space-4);">
+                        Supported Payment Configuration
+                    </h2>
+                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: var(--space-5);">
+                        Configure which payment channels are authorized and active across your POS register terminals.
+                    </p>
+
+                    <div style="display: flex; flex-direction: column; gap: var(--space-4);">
+                        <div style="padding: var(--space-3); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); background: var(--bg-surface);">
+                            <BaseCheckbox
+                                v-model="form.payment_cash_enabled"
+                                label="Cash Payments"
+                            />
+                            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; padding-left: 1.75rem;">
+                                Allow cash collection with automatic change calculation and cash tender verification.
+                            </div>
+                        </div>
+
+                        <div style="padding: var(--space-3); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); background: var(--bg-surface);">
+                            <BaseCheckbox
+                                v-model="form.payment_card_enabled"
+                                label="Credit / Debit Cards"
+                            />
+                            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; padding-left: 1.75rem;">
+                                Accept card transactions with reference and authorization code recording.
+                            </div>
+                        </div>
+
+                        <div style="padding: var(--space-3); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); background: var(--bg-surface);">
+                            <BaseCheckbox
+                                v-model="form.payment_bank_transfer_enabled"
+                                label="Bank Transfers & Direct Wires"
+                            />
+                            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; padding-left: 1.75rem;">
+                                Record customer bank transfers, direct wire remittances, and institutional payments.
+                            </div>
+                        </div>
+
+                        <div style="padding: var(--space-3); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); background: var(--bg-surface);">
+                            <BaseCheckbox
+                                v-model="form.payment_other_enabled"
+                                label="Other Supported Methods"
+                            />
+                            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; padding-left: 1.75rem;">
+                                Enable miscellaneous supported tenders, store credits, or promotional vouchers.
+                            </div>
                         </div>
                     </div>
                 </div>

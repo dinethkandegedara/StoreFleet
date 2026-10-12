@@ -118,6 +118,10 @@ interface Props {
         tax_enabled: boolean;
         default_tax_rate: number;
         prices_include_tax: boolean;
+        payment_cash_enabled?: boolean;
+        payment_card_enabled?: boolean;
+        payment_bank_transfer_enabled?: boolean;
+        payment_other_enabled?: boolean;
     };
 }
 
@@ -333,7 +337,15 @@ const openPaymentModal = () => {
         toast.warning('Cart is empty. Add items first.');
         return;
     }
-    selectedPaymentMethod.value = 'cash';
+    if (props.settings.payment_cash_enabled !== false) {
+        selectedPaymentMethod.value = 'cash';
+    } else if (props.settings.payment_card_enabled !== false) {
+        selectedPaymentMethod.value = 'card';
+    } else if (props.settings.payment_bank_transfer_enabled !== false) {
+        selectedPaymentMethod.value = 'bank_transfer';
+    } else {
+        selectedPaymentMethod.value = 'other';
+    }
     tenderedCash.value = cartGrandTotal.value; // default to exact cash
     cardReference.value = '';
     paymentModalOpen.value = true;
@@ -794,8 +806,9 @@ onUnmounted(() => {
                 </div>
 
                 <!-- Payment Method Selector Tabs -->
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-2); margin-bottom: var(--space-4);">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: var(--space-2); margin-bottom: var(--space-4);">
                     <button
+                        v-if="settings.payment_cash_enabled !== false"
                         type="button"
                         :style="{
                             padding: '0.65rem 0.5rem',
@@ -818,6 +831,7 @@ onUnmounted(() => {
                     </button>
 
                     <button
+                        v-if="settings.payment_card_enabled !== false"
                         type="button"
                         :style="{
                             padding: '0.65rem 0.5rem',
@@ -840,6 +854,7 @@ onUnmounted(() => {
                     </button>
 
                     <button
+                        v-if="settings.payment_bank_transfer_enabled !== false || settings.payment_other_enabled !== false"
                         type="button"
                         :style="{
                             padding: '0.65rem 0.5rem',

@@ -21,6 +21,8 @@ import {
     ChevronDown,
     Shield,
     ShieldCheck,
+    Users,
+    Server,
     LogOut,
     LogIn
 } from 'lucide-vue-next';
@@ -116,6 +118,15 @@ const navigation = computed(() => {
         });
     }
 
+    if (can('users.view')) {
+        items.push({
+            name: 'Staff Accounts',
+            href: '/admin/users',
+            icon: Users,
+            active: page.url.startsWith('/admin/users'),
+        });
+    }
+
     if (can('branches.view')) {
         items.push({
             name: 'Branches',
@@ -144,6 +155,12 @@ const navigation = computed(() => {
     }
 
     if (page.props.auth?.user?.is_super_admin) {
+        items.push({
+            name: 'Platform Overview',
+            href: '/admin/platform',
+            icon: Server,
+            active: page.url.startsWith('/admin/platform'),
+        });
         items.push({
             name: 'Audit Logs',
             href: '/admin/audit-logs',

@@ -127,6 +127,10 @@ class PosTerminalController extends Controller
                 'tax_enabled' => (bool) $settings['tax_enabled'],
                 'default_tax_rate' => (float) $settings['default_tax_rate'],
                 'prices_include_tax' => (bool) $settings['prices_include_tax'],
+                'payment_cash_enabled' => (bool) ($settings['payment_cash_enabled'] ?? true),
+                'payment_card_enabled' => (bool) ($settings['payment_card_enabled'] ?? true),
+                'payment_bank_transfer_enabled' => (bool) ($settings['payment_bank_transfer_enabled'] ?? true),
+                'payment_other_enabled' => (bool) ($settings['payment_other_enabled'] ?? true),
             ],
         ]);
     }

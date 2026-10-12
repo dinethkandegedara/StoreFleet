@@ -37,6 +37,10 @@ class BusinessSettingService
         'receipt_header' => 'Thank you for shopping with us!',
         'receipt_footer' => 'Items may be exchanged within 30 days with original receipt.',
         'receipt_show_logo' => true,
+        'payment_cash_enabled' => true,
+        'payment_card_enabled' => true,
+        'payment_bank_transfer_enabled' => true,
+        'payment_other_enabled' => true,
     ];
 
     /**

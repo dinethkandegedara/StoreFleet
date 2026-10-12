@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AuditLogController;
+use App\Http\Controllers\Admin\PlatformController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
@@ -37,6 +38,10 @@ Route::middleware(['auth', 'active'])->group(function () {
 
     // Dedicated Super Admin Route Group
     Route::middleware('super_admin')->prefix('admin')->name('admin.')->group(function () {
+        Route::get('platform', [PlatformController::class, 'index'])
+            ->name('platform.index');
+        Route::post('platform/clear-cache', [PlatformController::class, 'clearCache'])
+            ->name('platform.clear-cache');
         Route::get('audit-logs', [AuditLogController::class, 'index'])
             ->name('audit-logs.index');
     });
